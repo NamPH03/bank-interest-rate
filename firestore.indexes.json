@@ -1,0 +1,28 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "rates",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "bankId", "order": "ASCENDING" },
+        { "fieldPath": "termMonths", "order": "ASCENDING" },
+        { "fieldPath": "capturedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "alerts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "crawlRuns",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "startedAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

@@ -1,0 +1,53 @@
+{
+  "name": "bank-interest-rate-monitor",
+  "version": "1.0.0",
+  "description": "Automated Vietnam Bank Interest Rate Monitor & Alert System using TypeScript and Firebase",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src/ --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "crawl": "tsx src/cli.ts crawl",
+    "analyze": "tsx src/cli.ts analyze",
+    "notify": "tsx src/cli.ts notify",
+    "run-once": "tsx src/cli.ts run-once",
+    "seed-banks": "tsx src/cli.ts seed-banks",
+    "healthcheck": "tsx src/cli.ts healthcheck"
+  },
+  "keywords": [
+    "vietnam",
+    "bank-interest-rates",
+    "crawler",
+    "firebase",
+    "firestore",
+    "cloud-functions"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.7.9",
+    "cheerio": "^1.0.0",
+    "commander": "^13.1.0",
+    "dotenv": "^16.4.7",
+    "firebase-admin": "^13.1.0",
+    "firebase-functions": "^6.3.2",
+    "resend": "^4.1.2",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "@typescript-eslint/eslint-plugin": "^8.24.1",
+    "@typescript-eslint/parser": "^8.24.1",
+    "eslint": "^9.20.1",
+    "prettier": "^3.5.1",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.6"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
