@@ -5,7 +5,7 @@ export const STANDARD_TERMS: readonly number[] = [1, 3, 6, 9, 12, 18, 24, 36] as
 export const DEFAULT_RATE_TYPE = "online_standard";
 
 export const DEFAULT_THRESHOLDS = {
-  SIGNAL_MIN_BANKS: 6, // Ít nhất 6/10 ngân hàng đổi chiều
+  SIGNAL_MIN_BANKS: 10, // Ít nhất 10/20 ngân hàng đổi chiều (50%)
   SIGNAL_CHANGE_THRESHOLD: 0.20, // Biến động trung bình >= 0.20 điểm %
   SIGNAL_STRONG_THRESHOLD: 0.25, // Biến động trung bình >= 0.25 điểm %
   SIGNAL_COOLDOWN_HOURS: 24, // Không gửi alert cùng chiều trong 24h trừ khi có đợt tăng mới
@@ -15,6 +15,7 @@ export const DEFAULT_THRESHOLDS = {
 };
 
 export const INITIAL_BANKS: BankSeed[] = [
+  // Big 4 (Nhà nước & TMCP Nhà nước)
   {
     id: "vietcombank",
     code: "VCB",
@@ -55,6 +56,8 @@ export const INITIAL_BANKS: BankSeed[] = [
     rateType: DEFAULT_RATE_TYPE,
     isActive: true,
   },
+
+  // Top TMCP Tư nhân hàng đầu
   {
     id: "techcombank",
     code: "TCB",
@@ -112,6 +115,108 @@ export const INITIAL_BANKS: BankSeed[] = [
     shortName: "Sacombank",
     website: "https://sacombank.com.vn",
     crawler: "sacombank",
+    rateType: DEFAULT_RATE_TYPE,
+    isActive: true,
+  },
+
+  // 10 Ngân hàng TMCP lớn mở rộng
+  {
+    id: "shb",
+    code: "SHB",
+    name: "Ngân hàng TMCP Sài Gòn - Hà Nội",
+    shortName: "SHB",
+    website: "https://shb.com.vn",
+    crawler: "shb",
+    rateType: DEFAULT_RATE_TYPE,
+    isActive: true,
+  },
+  {
+    id: "lpbank",
+    code: "LPB",
+    name: "Ngân hàng TMCP Lộc Phát Việt Nam",
+    shortName: "LPBank",
+    website: "https://lpbank.com.vn",
+    crawler: "lpbank",
+    rateType: DEFAULT_RATE_TYPE,
+    isActive: true,
+  },
+  {
+    id: "vib",
+    code: "VIB",
+    name: "Ngân hàng TMCP Quốc tế Việt Nam",
+    shortName: "VIB",
+    website: "https://vib.com.vn",
+    crawler: "vib",
+    rateType: DEFAULT_RATE_TYPE,
+    isActive: true,
+  },
+  {
+    id: "tpbank",
+    code: "TPB",
+    name: "Ngân hàng TMCP Tiên Phong",
+    shortName: "TPBank",
+    website: "https://tpb.vn",
+    crawler: "tpbank",
+    rateType: DEFAULT_RATE_TYPE,
+    isActive: true,
+  },
+  {
+    id: "msb",
+    code: "MSB",
+    name: "Ngân hàng TMCP Hàng Hải Việt Nam",
+    shortName: "MSB",
+    website: "https://msb.com.vn",
+    crawler: "msb",
+    rateType: DEFAULT_RATE_TYPE,
+    isActive: true,
+  },
+  {
+    id: "seabank",
+    code: "SSB",
+    name: "Ngân hàng TMCP Đông Nam Á",
+    shortName: "SeABank",
+    website: "https://seabank.com.vn",
+    crawler: "seabank",
+    rateType: DEFAULT_RATE_TYPE,
+    isActive: true,
+  },
+  {
+    id: "ocb",
+    code: "OCB",
+    name: "Ngân hàng TMCP Phương Đông",
+    shortName: "OCB",
+    website: "https://ocb.com.vn",
+    crawler: "ocb",
+    rateType: DEFAULT_RATE_TYPE,
+    isActive: true,
+  },
+  {
+    id: "eximbank",
+    code: "EIB",
+    name: "Ngân hàng TMCP Xuất Nhập khẩu Việt Nam",
+    shortName: "Eximbank",
+    website: "https://eximbank.com.vn",
+    crawler: "eximbank",
+    rateType: DEFAULT_RATE_TYPE,
+    isActive: true,
+  },
+  {
+    id: "namabank",
+    code: "NAB",
+    name: "Ngân hàng TMCP Nam Á",
+    shortName: "Nam A Bank",
+    website: "https://namabank.com.vn",
+    crawler: "namabank",
+    rateType: DEFAULT_RATE_TYPE,
+    isActive: true,
+  },
+  {
+    id: "bacabank",
+    code: "BAB",
+    name: "Ngân hàng TMCP Bắc Á",
+    shortName: "Bac A Bank",
+    website: "https://bac-abank.vn",
+    crawler: "bacabank",
     rateType: DEFAULT_RATE_TYPE,
     isActive: true,
   },
