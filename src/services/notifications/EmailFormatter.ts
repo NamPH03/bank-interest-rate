@@ -16,6 +16,8 @@ export class EmailFormatter {
       timeZone: "Asia/Ho_Chi_Minh",
     }).format(analysis.analyzedAt);
 
+    const monthly = analysis.monthlyStats;
+
     // Text format
     let text = `MẶT BẰNG LÃI SUẤT ĐANG ${dirCapital}\n\n`;
     text += `${analysis.banksChangedCount}/${analysis.totalBanksAudited} ngân hàng được theo dõi vừa ${dirVerb} lãi suất trong 24 giờ qua.\n\n`;
@@ -26,6 +28,13 @@ export class EmailFormatter {
       text += `* Kỳ hạn ${term.termMonths} tháng:\n`;
       text += `  + Biến động: ${term.avgChange > 0 ? (isUp ? "+" : "-") : ""}${term.avgChange.toFixed(2)} điểm %\n`;
       text += `  + Số ngân hàng thay đổi: ${changed}/${term.totalBanks} ngân hàng ${arrow}\n\n`;
+    }
+
+    if (monthly) {
+      text += `=== TỔNG HỢP TÍCH LŨY 30 NGÀY QUA ===\n`;
+      text += `* Biến động 30 ngày: ${monthly.cumulative30dDiff > 0 ? "+" : ""}${monthly.cumulative30dDiff.toFixed(2)} điểm %\n`;
+      text += `* Lãi suất TB hiện tại: ${monthly.avgCurrentRate.toFixed(2)}%/năm (30 ngày trước: ${monthly.avgRate30dAgo.toFixed(2)}%/năm)\n`;
+      text += `* GỢI Ý CHIẾN LƯỢC QUẢN TRỊ TIỀN:\n  ${monthly.financialAdvice}\n\n`;
     }
 
     text += `Signal Score: ${analysis.signalScore}/100 (${analysis.level})\n`;
@@ -63,6 +72,26 @@ export class EmailFormatter {
         ? "#d97706"
         : "#2563eb";
 
+    let monthlyAdviceHtml = "";
+    if (monthly) {
+      monthlyAdviceHtml = `
+      <!-- 30-Day Cumulative Card & Advice -->
+      <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+        <div style="font-size: 13px; font-weight: 700; color: #1e40af; text-transform: uppercase; margin-bottom: 6px;">
+          📊 Xu hướng Tích lũy 30 Ngày qua (1 Tháng)
+        </div>
+        <div style="font-size: 14px; color: #1e3a8a; margin-bottom: 10px; line-height: 1.5;">
+          Mặt bằng lãi suất toàn thị trường đã <strong>${monthly.cumulative30dDiff >= 0 ? "tăng" : "giảm"} ${Math.abs(monthly.cumulative30dDiff).toFixed(2)} điểm %</strong> so với 30 ngày trước 
+          (Hiện tại: <strong>${monthly.avgCurrentRate.toFixed(2)}%</strong> vs 30 ngày trước: <strong>${monthly.avgRate30dAgo.toFixed(2)}%</strong>).
+        </div>
+        <div style="border-top: 1px dashed #93c5fd; padding-top: 10px; font-size: 14px; color: #1e3a8a; line-height: 1.5;">
+          <strong>💡 Gợi ý Quản trị Dòng tiền:</strong><br/>
+          ${monthly.financialAdvice}
+        </div>
+      </div>
+      `;
+    }
+
     const html = `
 <!DOCTYPE html>
 <html lang="vi">
@@ -72,7 +101,7 @@ export class EmailFormatter {
   <title>${subject}</title>
 </head>
 <body style="margin: 0; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; color: #111827;">
-  <div style="max-width: 540px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+  <div style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
     
     <!-- Header -->
     <div style="background-color: ${isUp ? "#065f46" : "#7f1d1d"}; padding: 24px 20px; color: #ffffff;">
@@ -101,6 +130,8 @@ export class EmailFormatter {
           <div style="font-size: 11px; color: #64748b;">Xu hướng đa ngày</div>
         </div>
       </div>
+
+      ${monthlyAdviceHtml}
 
       <!-- Term Breakdown Table -->
       <h3 style="margin: 0 0 12px 0; font-size: 15px; color: #374151;">Chi tiết biến động theo kỳ hạn:</h3>

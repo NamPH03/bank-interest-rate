@@ -20,7 +20,7 @@ program
 
 program
   .command("seed-banks")
-  .description("Seed initial 10 banks into database")
+  .description("Seed initial 20 banks into database")
   .action(async () => {
     logger.info("Seeding initial banks...");
     await bankRepository.seedInitialBanks();
@@ -76,7 +76,9 @@ program
       multiChanges.changes1d,
       multiChanges.changes3d,
       multiChanges.changes7d,
-      activeBanks.length
+      activeBanks.length,
+      multiChanges.changes14d,
+      multiChanges.changes30d
     );
 
     console.log("\n=================== MARKET SIGNAL ANALYSIS ===================");
@@ -87,6 +89,14 @@ program
     console.log(`Average Diff:  ${analysis.overallAvgChange.toFixed(2)} percentage point`);
     console.log(`Actionable:    ${analysis.isActionable ? "YES (Alert Threshold Met)" : "NO (Below Threshold / Stable)"}`);
     console.log("--------------------------------------------------------------");
+
+    if (analysis.monthlyStats) {
+      console.log("30-Day Monthly Cumulative Trend:");
+      console.log(`  - Biến động 30 ngày: ${analysis.monthlyStats.cumulative30dDiff > 0 ? "+" : ""}${analysis.monthlyStats.cumulative30dDiff.toFixed(2)} pp`);
+      console.log(`  - Lãi suất TB hiện tại: ${analysis.monthlyStats.avgCurrentRate.toFixed(2)}% (30 ngày trước: ${analysis.monthlyStats.avgRate30dAgo.toFixed(2)}%)`);
+      console.log(`  - GỢI Ý CHIẾN LƯỢC TIỀN GỬI: ${analysis.monthlyStats.financialAdvice}`);
+      console.log("--------------------------------------------------------------");
+    }
 
     console.log("Term Breakdown:");
     for (const t of analysis.termSummaries) {
@@ -113,7 +123,9 @@ program
       multiChanges.changes1d,
       multiChanges.changes3d,
       multiChanges.changes7d,
-      activeBanks.length
+      activeBanks.length,
+      multiChanges.changes14d,
+      multiChanges.changes30d
     );
 
     if (options.force) {

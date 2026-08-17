@@ -9,6 +9,8 @@ export interface MultiWindowChanges {
   changes1d: RateChange[];
   changes3d: RateChange[];
   changes7d: RateChange[];
+  changes14d: RateChange[];
+  changes30d: RateChange[];
 }
 
 export class ChangeDetector {
@@ -26,10 +28,11 @@ export class ChangeDetector {
 
     for (const cur of currentRates) {
       // Find the most recent historical rate for this bank & term before the window threshold
+      const targetDate = windowDays > 0 ? windowDate : (cur.capturedAt ? new Date(new Date(cur.capturedAt).getTime() - 1000) : windowDate);
       const prev = await rateRepository.getLatestRateBefore(
         cur.bankId,
         cur.termMonths,
-        cur.capturedAt ? new Date(new Date(cur.capturedAt).getTime() - 1000) : windowDate
+        targetDate
       );
 
       if (prev && prev.rate !== undefined) {
@@ -49,7 +52,7 @@ export class ChangeDetector {
 
         if (diff !== 0) {
           logger.debug(
-            `[Change] ${bankName} ${cur.termMonths}M: ${prev.rate}% -> ${cur.rate}% (${diff > 0 ? "+" : ""}${diff} pp)`
+            `[Change ${windowDays}d] ${bankName} ${cur.termMonths}M: ${prev.rate}% -> ${cur.rate}% (${diff > 0 ? "+" : ""}${diff} pp)`
           );
         }
       }
@@ -59,16 +62,18 @@ export class ChangeDetector {
   }
 
   /**
-   * Calculate changes across 1-day, 3-day, and 7-day lookbacks
+   * Calculate changes across 1-day, 3-day, 7-day, 14-day, and 30-day lookbacks
    */
   async detectMultiWindowChanges(currentRates: BankRate[]): Promise<MultiWindowChanges> {
-    const [changes1d, changes3d, changes7d] = await Promise.all([
+    const [changes1d, changes3d, changes7d, changes14d, changes30d] = await Promise.all([
       this.detectChanges(currentRates, 1),
       this.detectChanges(currentRates, 3),
       this.detectChanges(currentRates, 7),
+      this.detectChanges(currentRates, 14),
+      this.detectChanges(currentRates, 30),
     ]);
 
-    return { changes1d, changes3d, changes7d };
+    return { changes1d, changes3d, changes7d, changes14d, changes30d };
   }
 }
 

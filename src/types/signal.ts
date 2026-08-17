@@ -16,6 +16,15 @@ export interface TermChangeSummary {
   changes: RateChange[];
 }
 
+export interface MonthlyTrendStats {
+  cumulative30dDiff: number; // e.g. +1.50 or -0.80 percentage points over 30 days
+  avgCurrentRate: number; // e.g. 5.85%
+  avgRate30dAgo: number; // e.g. 4.35%
+  direction30d: MarketDirection;
+  marketRegime: "LOW_YIELD" | "RISING_CYCLE" | "PEAK_YIELD" | "FALLING_CYCLE";
+  financialAdvice: string; // Actionable advice for money allocation / saving strategy
+}
+
 export interface SignalAnalysis {
   analyzedAt: Date;
   direction: MarketDirection;
@@ -27,5 +36,6 @@ export interface SignalAnalysis {
   overallAvgChange: number;
   termSummaries: TermChangeSummary[];
   topMovingTerms: TermChangeSummary[];
+  monthlyStats?: MonthlyTrendStats; // 30-day lookback & financial advice
   isActionable: boolean; // True if exceeds thresholds and suitable for alert
 }

@@ -4,6 +4,7 @@ import {
   SignalAnalysis,
   SignalLevel,
   TermChangeSummary,
+  MonthlyTrendStats,
 } from "../../types/signal";
 import { env } from "../../config/environment";
 import { STANDARD_TERMS } from "../../config/constants";
@@ -95,13 +96,15 @@ export class SignalEngine {
   }
 
   /**
-   * Analyze market-wide signal and calculate signal & trend scores
+   * Analyze market-wide signal, calculate signal & trend scores, and generate 30-day advice
    */
   analyze(
     changes1d: RateChange[],
     changes3d: RateChange[] = [],
     changes7d: RateChange[] = [],
-    totalBanks = 10
+    totalBanks = 20,
+    changes14d: RateChange[] = [],
+    changes30d: RateChange[] = []
   ): SignalAnalysis {
     const termSummaries = this.summarizeByTerm(changes1d, totalBanks);
 
@@ -153,12 +156,15 @@ export class SignalEngine {
     // Total Signal Score (0 - 100)
     const signalScore = Math.min(Math.max(breadthScore + magnitudeScore + termConsensusScore, 0), 100);
 
-    // 4. Trend Score (0 - 100) combining 1d, 3d, 7d momentum
+    // 4. Trend Score (0 - 100) combining 1d, 3d, 7d, 30d momentum
     const bankCount3d = new Set(changes3d.filter((c) => c.diffPercentagePoint !== 0).map((c) => c.bankId)).size;
     const bankCount7d = new Set(changes7d.filter((c) => c.diffPercentagePoint !== 0).map((c) => c.bankId)).size;
+    const bankCount30d = new Set(changes30d.filter((c) => c.diffPercentagePoint !== 0).map((c) => c.bankId)).size;
+
     let trendScore = signalScore;
-    if (bankCount7d > 0) {
-      const acceleration = (banksChangedCount * 0.5 + bankCount3d * 0.3 + bankCount7d * 0.2) / totalBanks;
+    if (bankCount7d > 0 || bankCount30d > 0) {
+      const acceleration =
+        (banksChangedCount * 0.4 + bankCount3d * 0.2 + bankCount7d * 0.2 + bankCount30d * 0.2) / totalBanks;
       trendScore = Math.min(Math.round(acceleration * 100), 100);
     }
 
@@ -176,6 +182,59 @@ export class SignalEngine {
           b.banksIncreased + b.banksDecreased - (a.banksIncreased + a.banksDecreased) ||
           b.avgChange - a.avgChange
       );
+
+    // 5. 30-Day Monthly Trend Analysis & Financial Advice
+    let monthlyStats: MonthlyTrendStats | undefined;
+    if (changes30d && changes30d.length > 0) {
+      let sumCurrent = 0;
+      let sum30dAgo = 0;
+      let count = 0;
+
+      for (const c of changes30d) {
+        sumCurrent += c.currentRate;
+        sum30dAgo += c.previousRate;
+        count++;
+      }
+
+      const avgCurrentRate = count > 0 ? Math.round((sumCurrent / count) * 100) / 100 : 0;
+      const avgRate30dAgo = count > 0 ? Math.round((sum30dAgo / count) * 100) / 100 : 0;
+      const cumulative30dDiff = Math.round((avgCurrentRate - avgRate30dAgo) * 100) / 100;
+
+      let direction30d: MarketDirection = "STABLE";
+      if (cumulative30dDiff >= 0.15) direction30d = "UP";
+      else if (cumulative30dDiff <= -0.15) direction30d = "DOWN";
+
+      let marketRegime: MonthlyTrendStats["marketRegime"] = "LOW_YIELD";
+      let financialAdvice = "";
+
+      if (avgCurrentRate >= 6.5) {
+        if (direction30d === "UP" || direction30d === "STABLE") {
+          marketRegime = "PEAK_YIELD";
+          financialAdvice = "🎯 Lãi suất đang ở vùng ĐỈNH HẤP DẪN (trên 6.5%/năm). Thời điểm vàng để CHỐT KỲ HẠN DÀI (12M - 24M) nhằm khóa lợi suất cao an toàn cho 1-2 năm tới.";
+        } else {
+          marketRegime = "FALLING_CYCLE";
+          financialAdvice = "⚠️ Lãi suất cao nhưng bắt đầu có dấu hiệu GIẢM DẦN. Khuyến nghị: Nhanh chóng khóa lãi suất kỳ hạn dài (12M - 18M) trước khi các ngân hàng hạ thêm lãi suất.";
+        }
+      } else if (direction30d === "UP") {
+        marketRegime = "RISING_CYCLE";
+        financialAdvice = "📈 Thị trường đang trong CHU KỲ TĂNG LÃI SUẤT tích lũy 30 ngày. Khuyến nghị: Chưa nên khóa vốn quá dài ngay, nên chia nhỏ dòng tiền (Chiến lược gửi bậc thang 1M, 3M, 6M) để sẵn sàng tái tục ở các mức lãi suất cao hơn tiếp theo.";
+      } else if (direction30d === "DOWN") {
+        marketRegime = "FALLING_CYCLE";
+        financialAdvice = "📉 Lãi suất đang trong xu hướng GIẢM. Nếu gửi tiết kiệm, nên ưu tiên chọn kỳ hạn 6M - 12M để tránh bị giảm lãi suất tiếp theo.";
+      } else {
+        marketRegime = "LOW_YIELD";
+        financialAdvice = "⏸️ Mặt bằng lãi suất đang ở VÙNG THẤP VÀ ỔN ĐỊNH. Khuyến nghị: Giữ tiền linh hoạt ở kỳ hạn ngắn (1M - 3M) hoặc tiền gửi linh hoạt để sẵn sàng đón cơ hội đầu tư/kinh doanh hoặc chờ sóng tăng lãi suất mới.";
+      }
+
+      monthlyStats = {
+        cumulative30dDiff,
+        avgCurrentRate,
+        avgRate30dAgo,
+        direction30d,
+        marketRegime,
+        financialAdvice,
+      };
+    }
 
     // Actionable check
     const isActionable =
@@ -199,13 +258,13 @@ export class SignalEngine {
       overallAvgChange,
       termSummaries,
       topMovingTerms,
+      monthlyStats,
       isActionable,
     };
   }
 
   /**
    * Smart Anti-Spam / Cooldown Check
-   * Evaluates if a new alert should be sent or suppressed based on recent alerts within cooldown window
    */
   async shouldSendAlert(analysis: SignalAnalysis): Promise<{ shouldSend: boolean; reason: string }> {
     if (!analysis.isActionable) {
@@ -233,9 +292,9 @@ export class SignalEngine {
       };
     }
 
-    // Same direction: only send if there is significant new escalation (+0.10 pp higher or >= 2 more banks)
+    // Same direction: send if significant escalation (+15 score points or level upgraded to CRITICAL)
     const scoreDiff = analysis.signalScore - lastAlert.signalScore;
-    if (scoreDiff >= 15 || analysis.level === "CRITICAL" && lastAlert.level !== "CRITICAL") {
+    if (scoreDiff >= 15 || (analysis.level === "CRITICAL" && lastAlert.level !== "CRITICAL")) {
       return {
         shouldSend: true,
         reason: `Signal strengthened significantly (+${scoreDiff} points / Level ${analysis.level}). Escalation alert approved.`,

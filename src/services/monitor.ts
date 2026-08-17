@@ -24,10 +24,10 @@ export interface MonitorCycleResult {
 export class RateMonitorService {
   /**
    * Execute one full end-to-end cycle:
-   * 1. Crawl all 10 active banks
+   * 1. Crawl all 20 active banks
    * 2. Save rates & audit run
-   * 3. Detect changes vs historical data (1d, 3d, 7d)
-   * 4. Compute Signal & Trend Scores
+   * 3. Detect changes vs historical data (1d, 3d, 7d, 14d, 30d)
+   * 4. Compute Signal, Trend & Monthly Strategy Scores
    * 5. Apply Smart Cooldown / Anti-Spam filters
    * 6. Send Mobile-friendly Alert Email if actionable
    */
@@ -44,23 +44,25 @@ export class RateMonitorService {
         runId: crawlSummary.crawlRun.id!,
         banksAudited: 0,
         totalRatesCaptured: 0,
-        analysis: signalEngine.analyze([], [], [], 10),
+        analysis: signalEngine.analyze([], [], [], 20),
         emailSent: false,
         reason: "Crawl captured 0 rates",
       };
     }
 
-    // Step 2: Detect changes
+    // Step 2: Detect changes across multi-day & 30-day windows
     const multiChanges = await changeDetector.detectMultiWindowChanges(currentRates);
     const activeBanks = await bankRepository.getAllActiveBanks();
     const bankNames = activeBanks.map((b) => b.shortName);
 
-    // Step 3: Compute signal & trend scores
+    // Step 3: Compute signal, trend & 30-day cumulative stats
     const analysis = signalEngine.analyze(
       multiChanges.changes1d,
       multiChanges.changes3d,
       multiChanges.changes7d,
-      activeBanks.length
+      activeBanks.length,
+      multiChanges.changes14d,
+      multiChanges.changes30d
     );
 
     // Step 4: Evaluate Cooldown & Anti-Spam
@@ -101,7 +103,9 @@ export class RateMonitorService {
       multiChanges.changes1d,
       multiChanges.changes3d,
       multiChanges.changes7d,
-      activeBanks.length
+      activeBanks.length,
+      multiChanges.changes14d,
+      multiChanges.changes30d
     );
   }
 }

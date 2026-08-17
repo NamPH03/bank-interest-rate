@@ -60,4 +60,38 @@ describe("SignalEngine", () => {
     expect(["HIGH", "CRITICAL"]).toContain(analysis.level);
     expect(analysis.signalScore).toBeGreaterThanOrEqual(65);
   });
+
+  it("should calculate 30-day cumulative trend and produce actionable money allocation advice", () => {
+    const changes30d: RateChange[] = [
+      {
+        bankId: "vietcombank",
+        bankName: "Vietcombank",
+        termMonths: 12,
+        currentRate: 6.8,
+        previousRate: 5.0,
+        diffPercentagePoint: 1.8,
+        capturedAt: new Date(),
+        previousCapturedAt: new Date(),
+      },
+      {
+        bankId: "techcombank",
+        bankName: "Techcombank",
+        termMonths: 12,
+        currentRate: 7.0,
+        previousRate: 5.2,
+        diffPercentagePoint: 1.8,
+        capturedAt: new Date(),
+        previousCapturedAt: new Date(),
+      },
+    ];
+
+    const analysis = engine.analyze([], [], [], 20, [], changes30d);
+    expect(analysis.monthlyStats).toBeDefined();
+    expect(analysis.monthlyStats?.cumulative30dDiff).toBe(1.8);
+    expect(analysis.monthlyStats?.avgCurrentRate).toBe(6.9);
+    expect(analysis.monthlyStats?.avgRate30dAgo).toBe(5.1);
+    expect(analysis.monthlyStats?.direction30d).toBe("UP");
+    expect(analysis.monthlyStats?.marketRegime).toBe("PEAK_YIELD");
+    expect(analysis.monthlyStats?.financialAdvice).toContain("ĐỈNH HẤP DẪN");
+  });
 });
